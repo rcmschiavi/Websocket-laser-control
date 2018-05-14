@@ -7,5 +7,6 @@ s.on('connection',function(ws){
       if(message == "Hallo!"){
         ws.send("Hey there from the server");
       }
+      ws.send("ok");
   });
 })
