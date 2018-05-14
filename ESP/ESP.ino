@@ -12,18 +12,23 @@ WebSocketsServer webSocket = WebSocketsServer(80); //Ativa a comunicação por w
 //Atribuições para conexão com o roteador
 const char* ssid     = "SSID";
 const char* password = "PASSWORD";
-
+//Variáveis para recebimento serial
+String inputString = "";         
+boolean StringBuffer = false; 
+uint8_t endereco = 0;
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
 
   switch (type) { //verifica o tipo de mensagem recebida
     case WStype_CONNECTED: { //caso conecte
         IPAddress ip = webSocket.remoteIP(num);
+        endereco =num;
         webSocket.sendTXT(num, "Conectado"); //Envia a mensagem para o cliente
       }
       break;
     case WStype_TEXT: { //Caso receba mensagem
         String text = String((char *) &payload[0]); //Converte a mensagem para string
+        text.replace('\n', ' ');
         Serial.println(text); //Envia o comando via serial para o arduino
         break;
       }
@@ -43,4 +48,21 @@ void setup() {
 
 void loop() {
   webSocket.loop();
+  //Verifica dados na serial e faz a leitura do comando de resposta do arduino
+   while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    inputString += inChar;
+    if (inChar == '\n') {
+      StringBuffer = true;
+    }
+  }
+  //Verifica tem string para enviar
+  if(StringBuffer){
+    webSocket.sendTXT(endereco,inputString); //Envia a resposta do arduino para o cliente websocket
+    StringBuffer=false;
+  }
+}
+
+void serialEvent() {
+ 
 }
